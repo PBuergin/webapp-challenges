@@ -9,7 +9,7 @@
 
 ## Ausgangslage
 
-Du erhältst eine Angular-App mit einem funktionierenden **Light-Theme** (Angular Material 3). Die App hat einen Header, eine Sidebar und Content-Bereich mit Cards. Alles sieht gut aus — aber es fehlt der **Dark Mode**.
+Du erhältst eine Angular-App mit einem funktionierenden **Light-Theme** (Angular Material 3). Die App hat einen Header und Content-Bereich mit Cards. Alles sieht gut aus — aber es fehlt der **Dark Mode**.
 
 ## Aufgabe
 
