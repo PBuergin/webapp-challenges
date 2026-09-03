@@ -1,46 +1,45 @@
 import { Component, signal } from '@angular/core';
-import { signalForm, signalFormField, FormsModule } from '@angular/forms/signal';
-import { required, minLength, email } from '@angular/forms/signal/validators';
+import { form, FormField, required, minLength, email } from '@angular/forms/signals';
 
 @Component({
   selector: 'app-registration-form',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormField],
   template: `
     <form (ngSubmit)="onSubmit()">
       <div class="form-group">
         <label for="name">Name</label>
-        <input id="name" [formField]="form.controls.name" placeholder="Max Muster" />
-        @if (form.controls.name.touched() && !form.controls.name.valid()) {
+        <input id="name" [formField]="userForm.name" placeholder="Max Muster" />
+        @if (userForm.name().touched() && !userForm.name().valid()) {
           <span class="error">Name ist erforderlich (min. 2 Zeichen)</span>
         }
       </div>
 
       <div class="form-group">
         <label for="email">E-Mail</label>
-        <input id="email" type="email" [formField]="form.controls.email" placeholder="max@beispiel.ch" />
-        @if (form.controls.email.touched() && !form.controls.email.valid()) {
+        <input id="email" type="email" [formField]="userForm.email" placeholder="max@beispiel.ch" />
+        @if (userForm.email().touched() && !userForm.email().valid()) {
           <span class="error">Bitte gib eine gültige E-Mail-Adresse ein</span>
         }
       </div>
 
       <div class="form-group">
         <label for="password">Passwort</label>
-        <input id="password" type="password" [formField]="form.controls.password" placeholder="Min. 8 Zeichen" />
-        @if (form.controls.password.touched() && !form.controls.password.valid()) {
+        <input id="password" type="password" [formField]="userForm.password" placeholder="Min. 8 Zeichen" />
+        @if (userForm.password().touched() && !userForm.password().valid()) {
           <span class="error">Passwort ist erforderlich (min. 8 Zeichen)</span>
         }
       </div>
 
       <div class="form-group">
         <label for="age">Alter</label>
-        <input id="age" type="number" [formField]="form.controls.age" placeholder="25" />
-        @if (form.controls.age.touched() && !form.controls.age.valid()) {
+        <input id="age" type="number" [formField]="userForm.age" placeholder="25" />
+        @if (userForm.age().touched() && !userForm.age().valid()) {
           <span class="error">Alter ist erforderlich</span>
         }
       </div>
 
-      <button type="submit" [disabled]="form.valid()">
+      <button type="submit" [disabled]="!userForm().valid()">
         Registrieren
       </button>
     </form>
@@ -117,26 +116,23 @@ import { required, minLength, email } from '@angular/forms/signal/validators';
   `]
 })
 export class RegistrationFormComponent {
-  form = signalForm({
-    name: signalFormField('', {
-      validators: [required(), minLength(2)],
-    }),
-    email: signalFormField('', {
-      validators: [required(), minLength(5)],
-    }),
-    password: signalFormField('', {
-      validators: [required(), minLength(8)],
-    }),
-    age: signalFormField('', {
-      validators: [required()],
-    }),
+  model = signal({ name: '', email: '', password: '', age: '' });
+
+  userForm = form(this.model, (path) => {
+    required(path.name);
+    minLength(path.name, 2);
+    required(path.email);
+    minLength(path.email, 5);
+    required(path.password);
+    minLength(path.password, 8);
+    required(path.age);
   });
 
   submitted = signal(false);
 
   onSubmit() {
-    if (this.form.valid()) {
-      const value = this.form.value();
+    if (this.userForm().valid()) {
+      const value = this.userForm().value();
       console.log('Registrierung:', value);
       this.submitted.set(true);
     }
