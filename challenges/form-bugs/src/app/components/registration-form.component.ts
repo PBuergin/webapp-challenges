@@ -39,7 +39,7 @@ import { form, FormField, required, minLength, email } from '@angular/forms/sign
         }
       </div>
 
-      <button type="submit" [disabled]="!userForm().valid()">
+      <button type="submit" [disabled]="userForm().valid()">
         Registrieren
       </button>
     </form>
