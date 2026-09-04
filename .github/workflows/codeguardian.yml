@@ -11,26 +11,30 @@ permissions:
 jobs:
   review:
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR: ${{ github.event.pull_request.number }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0
+      # Base repo only. Never check out fork code in a pull_request_target job:
+      # it runs with our token and secrets ("pwn request").
+      - uses: actions/checkout@v5
 
       - name: Get PR diff
-        id: diff
         run: |
-          git diff origin/${{ github.base_ref }}...HEAD -- 'challenges/' > /tmp/pr-diff.txt
-          echo "diff_size=$(wc -c < /tmp/pr-diff.txt)" >> "$GITHUB_OUTPUT"
+          gh api "repos/${{ github.repository }}/pulls/$PR/files" --paginate --slurp \
+            > /tmp/pr-files.json
+          jq -r '.[][] | select(.filename | startswith("challenges/")) | .filename + "\n" + (.patch // "")' \
+            /tmp/pr-files.json > /tmp/pr-diff.txt
+          jq -r '.[][] | select(.filename | startswith("challenges/")) | .filename' \
+            /tmp/pr-files.json > /tmp/pr-names.txt
 
       - name: Find challenge and codeguardian config
         id: config
         run: |
-          # Find which challenge directory was changed
-          CHALLENGE_DIR=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- 'challenges/' | head -1 | cut -d'/' -f1-2)
+          CHALLENGE_DIR=$(head -1 /tmp/pr-names.txt | cut -d'/' -f1-2)
           echo "challenge_dir=$CHALLENGE_DIR" >> "$GITHUB_OUTPUT"
 
-          if [ -f "$CHALLENGE_DIR/.codeguardian.json" ]; then
+          if [ -n "$CHALLENGE_DIR" ] && [ -f "$CHALLENGE_DIR/.codeguardian.json" ]; then
             echo "has_config=true" >> "$GITHUB_OUTPUT"
             cat "$CHALLENGE_DIR/.codeguardian.json" > /tmp/codeguardian.json
           else
@@ -41,7 +45,6 @@ jobs:
         if: steps.config.outputs.has_config == 'true'
         env:
           MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
-          GH_TOKEN: ${{ github.token }}
         run: |
           if [ -z "$MINIMAX_API_KEY" ]; then
             echo "Error: MINIMAX_API_KEY secret is not set in this repository."
@@ -94,12 +97,10 @@ jobs:
             exit 1
           fi
 
-          gh pr comment ${{ github.event.pull_request.number }} --body "$REVIEW"
+          gh pr comment "$PR" --repo "${{ github.repository }}" --body "$REVIEW"
 
       - name: Post no-config notice
         if: steps.config.outputs.has_config == 'false'
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
-          gh pr comment ${{ github.event.pull_request.number }} --body \
+          gh pr comment "$PR" --repo "${{ github.repository }}" --body \
             "Diese Challenge hat kein automatisches CodeGuardian-Review. Bitte wende dich an den Dozenten für Feedback."
