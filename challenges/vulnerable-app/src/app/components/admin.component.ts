@@ -59,11 +59,11 @@ import { AuthService } from '../services/auth.service';
       </table>
     </div>
 
-    <div class="card" style="display: none;" id="debug-panel">
-      <h3>Debug Info</h3>
-      <p><strong>DB Connection:</strong> postgresql://admin:s3cret&#64;db.internal:5432/securenotes</p>
-      <p><strong>API Key:</strong> sk-prod-8f3a2b1c9d4e5f6a7b8c9d0e1f2a3b4c</p>
-      <p><strong>Admin Credentials:</strong> admin / admin123</p>
+    <div class="card">
+      <h3>Systemstatus</h3>
+      <p style="color: #666; margin: 0;">
+        Keine internen Secrets oder Debug-Informationen werden im Frontend angezeigt.
+      </p>
     </div>
   `,
 })
